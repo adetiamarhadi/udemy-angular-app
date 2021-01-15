@@ -1,8 +1,10 @@
 import { AuthService, AuthResponseData } from './auth.service';
-import { Component, OnInit } from '@angular/core';
+import { Component, ComponentFactoryResolver, OnInit, ViewChild } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { Router } from '@angular/router';
+import { AlertComponent } from '../shared/alert/alert.component';
+import { PlaceholderDirective } from '../shared/placeholder/placeholder.directive';
 
 @Component({
   selector: 'app-auth',
@@ -15,7 +17,13 @@ export class AuthComponent implements OnInit {
   isLoading = false;
   error: string = null;
 
-  constructor(private authService: AuthService, private router: Router) { }
+  @ViewChild(PlaceholderDirective) alertHost: PlaceholderDirective;
+
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private componentFactoryResolver: ComponentFactoryResolver
+  ) { }
 
   ngOnInit(): void {
   }
@@ -52,11 +60,24 @@ export class AuthComponent implements OnInit {
       }, errorMessage => {
         console.log(errorMessage);
         this.error = errorMessage;
+        this.showErrorAlert(errorMessage);
         this.isLoading = false;
       }
     );
 
     form.reset();
+  }
+
+  onHandleError() {
+    this.error = null;
+  }
+
+  private showErrorAlert(message: string) {
+    // const alertComponent = new AlertComponent();
+    const alertComponentFactory = this.componentFactoryResolver.resolveComponentFactory(AlertComponent);
+    const hostViewContainerRef = this.alertHost.viewContainerRef;
+    hostViewContainerRef.clear();
+    hostViewContainerRef.createComponent(alertComponentFactory);
   }
 
 }
