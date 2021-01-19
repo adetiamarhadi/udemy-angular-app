@@ -4,6 +4,7 @@ import { ShoppingListComponent } from './shopping-list.component';
 import { NgModule } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { LoggingService } from '../logging.service';
 
 @NgModule({
   declarations: [
@@ -17,5 +18,6 @@ import { FormsModule } from '@angular/forms';
     ]),
     SharedModule
   ]
+  // providers: [LoggingService]
 })
 export class ShoppingListModule {}

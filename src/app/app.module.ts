@@ -7,6 +7,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { AppComponent } from './app.component';
 import { HeaderComponent } from './header/header.component';
 import { SharedModule } from './shared/shared.module';
+import { LoggingService } from './logging.service';
 
 @NgModule({
   declarations: [
@@ -21,5 +22,6 @@ import { SharedModule } from './shared/shared.module';
     CoreModule
   ],
   bootstrap: [AppComponent]
+  // providers: [LoggingService]
 })
 export class AppModule { }
