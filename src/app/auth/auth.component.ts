@@ -23,6 +23,7 @@ export class AuthComponent implements OnInit, OnDestroy {
   @ViewChild(PlaceholderDirective) alertHost: PlaceholderDirective;
 
   private closeSubscription: Subscription;
+  private storeSubscription: Subscription;
 
   constructor(
     private authService: AuthService,
@@ -32,7 +33,7 @@ export class AuthComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-    this.store.select('auth').subscribe(appState => {
+    this.storeSubscription = this.store.select('auth').subscribe(appState => {
       this.isLoading = appState.loading;
       this.error = appState.authError;
       if (this.error) {
@@ -69,7 +70,7 @@ export class AuthComponent implements OnInit, OnDestroy {
   }
 
   onHandleError() {
-    this.error = null;
+    this.store.dispatch(new AuthActions.ClearError());
   }
 
   private showErrorAlert(message: string) {
@@ -88,6 +89,9 @@ export class AuthComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     if (this.closeSubscription) {
       this.closeSubscription.unsubscribe();
+    }
+    if (this.storeSubscription) {
+      this.storeSubscription.unsubscribe();
     }
   }
 
