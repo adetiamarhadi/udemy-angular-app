@@ -17,6 +17,40 @@ export interface AuthResponseData {
   registered?: string;
 }
 
+const handleAuthentication = (
+  expiresIn: number,
+  email: string,
+  userId: string,
+  token: string
+) => {
+  const expirationDate = new Date(new Date().getTime() + expiresIn * 1000);
+  return new AuthActions.AuthenticateSuccess({
+    email: email,
+    userId: userId,
+    token: token,
+    expirationDate: expirationDate
+  });
+};
+
+const handleError = (errorResponse: any) => {
+  let errorMessage = 'An unknown error occurred!'
+  if (!errorResponse.error || !errorResponse.error.error) {
+    return of(new AuthActions.AuthenticateFail(errorMessage));
+  }
+  switch (errorResponse.error.error.message) {
+    case 'EMAIL_EXISTS':
+      errorMessage = 'The email address is already in use by another account.';
+      break;
+    case 'EMAIL_NOT_FOUND':
+      errorMessage = 'There is no user record corresponding to this identifier. The user may have been deleted.';
+      break;
+    case 'INVALID_PASSWORD':
+      errorMessage = 'The password is invalid or the user does not have a password.';
+      break;
+  }
+  return of(new AuthActions.AuthenticateFail(errorMessage));
+};
+
 @Injectable()
 export class AuthEffects {
 
@@ -35,31 +69,10 @@ export class AuthEffects {
         }
       ).pipe(
         map(resData => {
-          const expirationDate = new Date(new Date().getTime() + +resData.expiresIn * 1000);
-          return new AuthActions.AuthenticateSuccess({
-            email: resData.email,
-            userId: resData.localId,
-            token: resData.idToken,
-            expirationDate: expirationDate
-          });
+          return handleAuthentication(+resData.expiresIn, resData.email, resData.localId, resData.idToken);
         }),
         catchError(errorResponse => {
-          let errorMessage = 'An unknown error occurred!'
-          if (!errorResponse.error || !errorResponse.error.error) {
-            return of(new AuthActions.AuthenticateFail(errorMessage));
-          }
-          switch (errorResponse.error.error.message) {
-            case 'EMAIL_EXISTS':
-              errorMessage = 'The email address is already in use by another account.';
-              break;
-            case 'EMAIL_NOT_FOUND':
-              errorMessage = 'There is no user record corresponding to this identifier. The user may have been deleted.';
-              break;
-            case 'INVALID_PASSWORD':
-              errorMessage = 'The password is invalid or the user does not have a password.';
-              break;
-          }
-          return of(new AuthActions.AuthenticateFail(errorMessage));
+          return handleError(errorResponse);
         })
       );
     }),
@@ -76,6 +89,23 @@ export class AuthEffects {
 
   @Effect()
   authSignup = this.actions$.pipe(
-    ofType(AuthActions.SIGNUP_START)
+    ofType(AuthActions.SIGNUP_START),
+    switchMap((signUpAction: AuthActions.SignupStart) => {
+      return this.http.post<AuthResponseData>(
+        'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + environment.firebaseAPIKey,
+        {
+          email: signUpAction.payload.email,
+          password: signUpAction.payload.password,
+          returnSecureToken: true
+        }
+      ).pipe(
+        map(resData => {
+          return handleAuthentication(+resData.expiresIn, resData.email, resData.localId, resData.idToken);
+        }),
+        catchError(errorResponse => {
+          return handleError(errorResponse);
+        })
+      );
+    })
   );
 }
