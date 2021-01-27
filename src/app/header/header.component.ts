@@ -1,3 +1,4 @@
+import * as RecipesActions from './../recipes/store/recipe.actions';
 import { DataStorageService } from './../shared/data-storage.service';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { AuthService } from '../auth/auth.service';
@@ -36,7 +37,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   onFetchData() {
-    this.dataStorageService.fetchRecipes().subscribe();
+    // this.dataStorageService.fetchRecipes().subscribe();
+    this.store.dispatch(new RecipesActions.FetchRecipes());
   }
 
   onLogout() {
